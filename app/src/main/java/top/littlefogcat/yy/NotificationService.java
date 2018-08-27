@@ -13,14 +13,11 @@ import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
 
 @SuppressLint("SimpleDateFormat")
 public class NotificationService extends Service {
@@ -35,32 +32,40 @@ public class NotificationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Http.get(Constant.REMOTE_JSON_URL, new Http.Callback() {
-            @Override
-            public void onCallback(String s) {
-                Log.d(TAG, "onStartCommand onCallback: " + s);
-                try {
-                    JSONObject obj = new JSONObject(s);
-                    getNotificationData().type = obj.getInt("type");
-                    getNotificationData().title = obj.getString("title");
-                    getNotificationData().text = obj.getString("text");
-                    if (getNotificationData().type != 0) {
-                        showNotification();
-                    } else {
-                        showDefaultNotification();
+        boolean clear = intent.getBooleanExtra(Constant.INTENT_EXTRA_FLAG_CLEAR_NOTIFICATION, false);
+        if (clear) {
+            stopForeground(true);
+            NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            if (nm != null) {
+                nm.cancel(1003);
+            }
+        } else {
+            Http.get(Constant.REMOTE_JSON_URL, new Http.Callback() {
+                @Override
+                public void onCallback(String s) {
+                    Log.d(TAG, "onStartCommand onCallback: " + s);
+                    try {
+                        JSONObject obj = new JSONObject(s);
+                        getNotificationData().type = obj.getInt("type");
+                        getNotificationData().title = obj.getString("title");
+                        getNotificationData().text = obj.getString("text");
+                        if (getNotificationData().type != 0) {
+                            showNotification();
+                        } else {
+                            showDefaultNotification();
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        onError(e);
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    onError(e);
                 }
-            }
 
-            @Override
-            public void onError(Throwable t) {
-                showDefaultNotification();
-            }
-        });
-
+                @Override
+                public void onError(Throwable t) {
+                    showDefaultNotification();
+                }
+            });
+        }
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -78,6 +83,7 @@ public class NotificationService extends Service {
     }
 
     private void showNotification() {
+        boolean showPersistNotification = SpUtils.getBoolean(Constant.SP_KEY_SHOW_PERSIST_NOTIFICATION, true);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationManager nManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
             if (nManager != null) {
@@ -89,7 +95,12 @@ public class NotificationService extends Service {
                         .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.logo_no_border))
                         .setWhen(System.currentTimeMillis())
                         .build();
-                startForeground(1003, notification);
+                if (showPersistNotification) {
+                    startForeground(1003, notification);
+                } else {
+                    stopForeground(true);
+                    nManager.notify(1003, notification);
+                }
             }
         } else {
             Notification notification = new Notification.Builder(this)
@@ -99,7 +110,15 @@ public class NotificationService extends Service {
                     .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.logo_no_border))
                     .setWhen(System.currentTimeMillis())
                     .getNotification();
-            startForeground(1003, notification);
+            if (showPersistNotification) {
+                startForeground(1003, notification);
+            } else {
+                stopForeground(true);
+                NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                if (nm != null) {
+                    nm.notify(1003, notification);
+                }
+            }
         }
         scheduleNext();
     }

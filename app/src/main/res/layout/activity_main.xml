@@ -102,4 +102,47 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.792" />
+
+    <RelativeLayout
+        android:id="@+id/settingFrame"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/colorPrimary"
+        android:visibility="invisible">
+
+        <TextView
+            android:id="@+id/tvSettingShow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="56dp"
+            android:background="@drawable/setting_text_bg"
+            android:padding="12dp"
+            android:text="显示常驻通知吗？"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+
+        <ImageButton
+            android:id="@+id/btnSettingOk"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_alignLeft="@id/tvSettingShow"
+            android:layout_alignStart="@id/tvSettingShow"
+            android:layout_below="@id/tvSettingShow"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/white_circle"
+            android:src="@drawable/ic_action_ok" />
+
+        <ImageButton
+            android:id="@+id/btnSettingCancel"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_alignEnd="@id/tvSettingShow"
+            android:layout_alignRight="@id/tvSettingShow"
+            android:layout_below="@id/tvSettingShow"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/white_circle"
+            android:src="@drawable/ic_action_cancel" />
+    </RelativeLayout>
 </android.support.constraint.ConstraintLayout>
